@@ -53,6 +53,7 @@ const reducer = (state, { type, payload }) => {
       }
       return {
         ...state,
+        previousOperand: evaluate(state),
         operation: payload.operation,
         currentOperand: null,
       };
@@ -79,10 +80,47 @@ const reducer = (state, { type, payload }) => {
         ...state,
         currentOperand: state.currentOperand.slice(0, -1),
       };
+    case ACTIONS.EVALUATE:
+      if (
+        state.operation == null ||
+        state.currentOperand == null ||
+        state.previousOperand == null
+      ) {
+        return state;
+      }
+      return {
+        ...state,
+        overwrite: true,
+        previousOperand: null,
+        operation: null,
+        currentOperand: evaluate(state),
+      };
 
     default:
       return state;
   }
+};
+
+const evaluate = ({ currentOperand, previousOperand, operation }) => {
+  const prev = parseFloat(previousOperand);
+  const current = parseFloat(currentOperand);
+  if (isNaN(prev) || isNaN(current)) return "";
+  let computation = "";
+  switch (operation) {
+    case "+":
+      computation = prev + current;
+      break;
+    case "-":
+      computation = prev - current;
+      break;
+    case "*":
+      computation = prev * current;
+      break;
+    case "÷":
+      computation = prev / current;
+      break;
+  }
+  return computation.toString();
 };
 
 const App = () => {
@@ -129,7 +167,13 @@ const App = () => {
       <OperationButton operation="-" dispatch={dispatch}></OperationButton>
       <DigitButton digit="." dispatch={dispatch} />
       <DigitButton digit="0" dispatch={dispatch} />
-      <button className="span-two"> = </button>
+      <button
+        className="span-two"
+        onClick={() => dispatch({ type: ACTIONS.EVALUATE })}
+      >
+        {" "}
+        ={" "}
+      </button>
     </div>
   );
 };
